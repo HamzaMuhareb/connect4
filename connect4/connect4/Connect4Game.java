@@ -13,11 +13,6 @@ public class Connect4Game {
     private int numOfPiecesToWin;
 
     private int fills;
-
-    public int[] getTopPieceIndex() {
-        return topPieceIndex;
-    }
-
     private int lastColumnPlayed = -1;
 
     public int getLastColumnPlayed() {
@@ -125,60 +120,152 @@ public class Connect4Game {
      * @return
      */
     public int evaluate(char player) {
-        int playerScore = calculateScore(player);
-        int opponentScore = calculateScore(otherPlayer(player));
-
-        if (playerScore >= numOfPiecesToWin) {
-            return Integer.MAX_VALUE; // Player wins
-        } else if (opponentScore >= numOfPiecesToWin) {
-            return Integer.MIN_VALUE; // Opponent wins
+        if (isWin(player)) {
+            return 100;  // Winning move
+        } else if (isWin(otherPlayer(player))) {
+            return -100;  // Losing move
         }
 
-        return playerScore - opponentScore;
-    }
-
-    private int calculateScore(char player) {
         int score = 0;
 
-        // Horizontal
-        score += countConsecutive(player, 1, 0);
+        // Consider different win conditions and assign weights
+        score += evaluateWinConditions(player);
 
-        // Vertical
-        score += countConsecutive(player, 0, 1);
+        // Evaluate threats and blocking
+        score += evaluateThreatsAndBlocking(player);
 
-        // Diagonal /
-        score += countConsecutive(player, 1, -1);
+        // Evaluate center control, open rows, and columns
+        score += evaluateCenterControl(player);
+        score += evaluateOpenRowsAndColumns(player);
 
-        // Diagonal \
-        score += countConsecutive(player, 1, 1);
+        // Avoidance of Losing Moves
+        score -= evaluateLosingMoves(player);
 
         return score;
     }
 
-    private int countConsecutive(char player, int rowChange, int colChange) {
-        int count = 0;
+    private int evaluateWinConditions(char player) {
+        int score = 0;
 
-        for (int row = 0; row < height; row++) {
-            for (int col = 0; col < width; col++) {
+        // Example: Assign weights based on the number of pieces in a row
+        for (int col = 0; col < width; col++) {
+            for (int row = 0; row < height; row++) {
                 if (grid[row][col] == player) {
-                    int consecutiveCount = 0;
+                    // Horizontal
+                    score += evaluateDirection(player, row, col, 0, 1);
 
-                    for (int k = 0; k < numOfPiecesToWin; k++) {
-                        int r = row + k * rowChange;
-                        int c = col + k * colChange;
+                    // Vertical
+                    score += evaluateDirection(player, row, col, 1, 0);
 
-                        if (r >= 0 && r < height && c >= 0 && c < width && grid[r][c] == player) {
-                            consecutiveCount++;
-                        }
-                    }
+                    // Diagonal 1
+                    score += evaluateDirection(player, row, col, 1, 1);
 
-                    count += Math.pow(10, consecutiveCount);
+                    // Diagonal 2
+                    score += evaluateDirection(player, row, col, 1, -1);
                 }
             }
         }
 
-        return count;
+        return score;
     }
+
+    private int evaluateDirection(char player, int startRow, int startCol, int rowIncrement, int colIncrement) {
+        int consecutiveCount = 0;
+
+        for (int i = 0; i < numOfPiecesToWin; i++) {
+            int row = startRow + i * rowIncrement;
+            int col = startCol + i * colIncrement;
+
+            if (row >= 0 && row < height && col >= 0 && col < width) {
+                if (grid[row][col] == player) {
+                    consecutiveCount++;
+                }
+            }
+        }
+
+        // Assign weights based on the number of consecutive pieces
+        if (consecutiveCount == 2) {
+            return 5;
+        } else if (consecutiveCount == 3) {
+            return 10;
+        } else if (consecutiveCount == 4) {
+            return 50;
+        }
+
+        return 0;
+    }
+
+    private int evaluateThreatsAndBlocking(char player) {
+        int score = 0;
+
+        // Example: +20 for having a threat, -10 for blocking opponent's threat
+        if (hasThreat(player)) {
+            score += 20;
+        }
+
+        if (hasThreat(otherPlayer(player))) {
+            score -= 10;
+        }
+
+        return score;
+    }
+
+    private boolean hasThreat(char player) {
+        // Your logic to check for a threat
+        // Example: Return true if the player has three pieces in a row with an empty slot on either side
+        return false;
+    }
+
+    private int evaluateCenterControl(char player) {
+        int centerCol = width / 2;
+        int centerRow = height / 2;
+
+        // Example: +10 for controlling the center
+        if (grid[centerRow][centerCol] == player) {
+            return 10;
+        }
+
+        return 0;
+    }
+
+    private int evaluateOpenRowsAndColumns(char player) {
+        int openRows = 0;
+        int openCols = 0;
+
+        for (int col = 0; col < width; col++) {
+            if (topPieceIndex[col] < height) {
+                openCols++;
+            }
+        }
+
+        for (int row = 0; row < height; row++) {
+            if (topPieceIndex[0] > 0 && grid[row][0] == ' ') {
+                openRows++;
+            }
+        }
+
+        // Example: +5 for each open row, +3 for each open column
+        return openRows * 5 + openCols * 3;
+    }
+
+    private int evaluateLosingMoves(char player) {
+        int score = 0;
+
+        // Your logic for avoiding losing moves
+        // Example: -50 for making a move that allows the opponent to win in the next turn
+        if (isLosingMove(player)) {
+            score -= 50;
+        }
+
+        return score;
+    }
+
+    private boolean isLosingMove(char player) {
+        // Your logic to check for a move that allows the opponent to win in the next turn
+        return false;
+    }
+
+
 
 
     /**

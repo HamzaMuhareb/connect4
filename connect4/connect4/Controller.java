@@ -50,36 +50,12 @@ public class Controller {
 
     //         ************** YOUR CODE HERE ************            \\
     private void computerPlay() {
-
         // this is a random move, you should change this code to run you own code
 //        Random random = new Random();
 //        int r = random.nextInt(n);
 //        board = board.allNextMoves(computer).get(r);
-//        board = (Connect4Game) maxMove(board).get(2);
-        List<Object> result = maxMove(board, 3); // You can adjust the depth as needed
-        Connect4Game bestMoveState;
-
-        if (result != null && result.size() == 2) {
-            bestMoveState = (Connect4Game) result.get(1);
-        } else {
-            // Handle the case where no valid move is found
-            return;
-        }
-
-        // Find the column of the move in the bestMoveState
-        int bestMove = -1;
-        for (int col = 0; col < n; col++) {
-            if (board.getTopPieceIndex()[col] != bestMoveState.getTopPieceIndex()[col]) {
-                bestMove = col;
-                break;
-            }
-        }
-
-        if (bestMove != -1) {
-            board.play(computer, bestMove);
-        }
+        board = (Connect4Game) maxMove(board,3).get(1);
     }
-
 
 
     /**
@@ -119,62 +95,47 @@ public class Controller {
             System.out.println("Invalid Column: out of range " + board.getWidth() + ", try agine");
         }
     }
-
-    private List<Object> maxMove(Connect4Game b, int depth) {
-        // the fuction returns list of object the first object is the evaluation (type Integer), the second is the state with the max evaluation
-//         ************** YOUR CODE HERE ************            \\
-        if (b.isFinished() || depth == 0) {
-            List<Object> result = new ArrayList<>();
-            result.add(b.evaluate(computer));
-            result.add(b);
-            return result;
-        }
-
+    private List<Object> maxMove(Connect4Game b,int depth) {
+        List<Object> result = new ArrayList<>();
+        List<Connect4Game> nextMoves = b.allNextMoves(computer);
         int maxEval = Integer.MIN_VALUE;
         Connect4Game bestMove = null;
 
-        for (Connect4Game nextBoard : b.allNextMoves(computer)) {
-            List<Object> evalAndState = minMove(nextBoard, depth - 1);
-            int eval = (int) evalAndState.get(0);
-
+        for (Connect4Game move : nextMoves) {
+            int eval = (int) minMove(move, depth-1).get(0);
             if (eval > maxEval) {
                 maxEval = eval;
-                bestMove = nextBoard;
+                bestMove = move;
             }
         }
 
-        List<Object> result = new ArrayList<>();
         result.add(maxEval);
         result.add(bestMove);
         return result;
     }
 
-    private List<Object> minMove(Connect4Game b , int depth) {
-        // the fuction returns list of object the first object is the evaluation (type Integer), the second is the state with the min evaluation
-//         ************** YOUR CODE HERE ************            \\
-        if (b.isFinished() || depth == 0) {
-            List<Object> result = new ArrayList<>();
-            result.add(b.evaluate(human));
+    private List<Object> minMove(Connect4Game b,int depth) {
+        List<Object> result = new ArrayList<>();
+        if (b.isFinished()|| depth < 1) {
+            result.add(b.evaluate(computer));
             result.add(b);
             return result;
         }
 
+        List<Connect4Game> nextMoves = b.allNextMoves(human);
         int minEval = Integer.MAX_VALUE;
-        Connect4Game bestMove = null;
+        Connect4Game minMove = null;
 
-        for (Connect4Game nextBoard : b.allNextMoves(human)) {
-            List<Object> evalAndState = maxMove(nextBoard, depth - 1);
-            int eval = (int) evalAndState.get(0);
-
+        for (Connect4Game move : nextMoves) {
+            int eval = (int) maxMove(move ,depth -1).get(0);
             if (eval < minEval) {
                 minEval = eval;
-                bestMove = nextBoard;
+                minMove = move;
             }
         }
 
-        List<Object> result = new ArrayList<>();
         result.add(minEval);
-        result.add(bestMove);
+        result.add(minMove);
         return result;
     }
 
