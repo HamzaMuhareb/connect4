@@ -99,7 +99,7 @@ public class Controller {
     private List<Object> maxMove(Connect4Game b,int depth) {
         List<Object> result = new ArrayList<>();
         if (b.isFinished()|| depth < 1) {
-            result.add(b.evaluate(computer));
+            result.add(b.evaluate(human));
             result.add(b);
             return result;
         }

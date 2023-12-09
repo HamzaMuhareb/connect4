@@ -186,9 +186,12 @@ public class Connect4Game {
         }
 
         if (consecutiveCount == numOfPiecesToWin -1) {
-            return 100;
+            return 150;
         }
-        return consecutiveCount*10;
+        else if (consecutiveCount > 1){
+            return consecutiveCount*10;
+        }
+        return 0;
     }
 
     private int evaluateCenterControl(char player) {
