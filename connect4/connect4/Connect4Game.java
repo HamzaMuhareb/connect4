@@ -62,26 +62,26 @@ public class Connect4Game {
         for (int i = 0; i < width; i++) {
             if (topPieceIndex[i] != 0) {
                 Connect4Game nextBoard = new Connect4Game(this);
-                nextBoard.play(nextPlayer, i);
+                nextBoard.addSlide(nextPlayer, i);
                 nextBoards.add(nextBoard);
             }
 
             if (topPieceIndex[i] != height ) {
                 Connect4Game nextBoard = new Connect4Game(this);
-                nextBoard.swap(nextPlayer, i);
+                nextBoard.swapSlide(nextPlayer, i);
                 nextBoards.add(nextBoard);
             }
 
             if (topPieceIndex[i] != height ) {
                 Connect4Game nextBoard = new Connect4Game(this);
-                nextBoard.delete(nextPlayer, i);
+                nextBoard.deleteSlide(nextPlayer, i);
                 nextBoards.add(nextBoard);
             }
         }
         return nextBoards;
     }
 
-    public boolean play(char player, int col) {
+    public boolean addSlide(char player, int col) {
         if (topPieceIndex[col] != 0) {
             topPieceIndex[col] -= 1;
             grid[topPieceIndex[col]][col] = player;
@@ -93,7 +93,7 @@ public class Connect4Game {
     }
 
 
-    public boolean swap(char player, int col) {
+    public boolean swapSlide(char player, int col) {
         if (topPieceIndex[col] != height ) {
             grid[topPieceIndex[col]][col] = player;
             lastColumnPlayed = col;
@@ -103,10 +103,11 @@ public class Connect4Game {
     }
 
 
-    public boolean delete(char player, int col) {
+    public boolean deleteSlide(char player, int col) {
         if (topPieceIndex[col] != height ) {
             grid[topPieceIndex[col]][col] = ' ';
             topPieceIndex[col] += 1;
+            fills--;
             lastColumnPlayed = col;
             return true;
         }
@@ -120,26 +121,26 @@ public class Connect4Game {
      * @return
      */
     public int evaluate(char player) {
+        // i it's for determinate the difficulty
+        int i = 10;
+
         if (isWin(player)) {
-            return 100;  // Winning move
+            return 300;
         } else if (isWin(otherPlayer(player))) {
-            return -100;  // Losing move
+            return -(300/i);
         }
 
         int score = 0;
 
-        // Consider different win conditions and assign weights
+        //evaluate winning
         score += evaluateWinConditions(player);
 
-        // Evaluate threats and blocking
-        score += evaluateThreatsAndBlocking(player);
-
-        // Evaluate center control, open rows, and columns
         score += evaluateCenterControl(player);
-        score += evaluateOpenRowsAndColumns(player);
 
-        // Avoidance of Losing Moves
-        score -= evaluateLosingMoves(player);
+        //evaluate losing
+        score -= (evaluateWinConditions(otherPlayer(player))/i);
+
+        score -= (evaluateCenterControl(otherPlayer(player))/i);
 
         return score;
     }
@@ -147,10 +148,10 @@ public class Connect4Game {
     private int evaluateWinConditions(char player) {
         int score = 0;
 
-        // Example: Assign weights based on the number of pieces in a row
         for (int col = 0; col < width; col++) {
             for (int row = 0; row < height; row++) {
                 if (grid[row][col] == player) {
+
                     // Horizontal
                     score += evaluateDirection(player, row, col, 0, 1);
 
@@ -162,6 +163,7 @@ public class Connect4Game {
 
                     // Diagonal 2
                     score += evaluateDirection(player, row, col, 1, -1);
+
                 }
             }
         }
@@ -183,89 +185,26 @@ public class Connect4Game {
             }
         }
 
-        // Assign weights based on the number of consecutive pieces
-        if (consecutiveCount == 2) {
-            return 5;
-        } else if (consecutiveCount == 3) {
-            return 10;
-        } else if (consecutiveCount == 4) {
-            return 50;
+        if (consecutiveCount == numOfPiecesToWin -1) {
+            return 100;
         }
-
-        return 0;
-    }
-
-    private int evaluateThreatsAndBlocking(char player) {
-        int score = 0;
-
-        // Example: +20 for having a threat, -10 for blocking opponent's threat
-        if (hasThreat(player)) {
-            score += 20;
-        }
-
-        if (hasThreat(otherPlayer(player))) {
-            score -= 10;
-        }
-
-        return score;
-    }
-
-    private boolean hasThreat(char player) {
-        // Your logic to check for a threat
-        // Example: Return true if the player has three pieces in a row with an empty slot on either side
-        return false;
+        return consecutiveCount*10;
     }
 
     private int evaluateCenterControl(char player) {
         int centerCol = width / 2;
         int centerRow = height / 2;
-
-        // Example: +10 for controlling the center
-        if (grid[centerRow][centerCol] == player) {
-            return 10;
-        }
-
-        return 0;
-    }
-
-    private int evaluateOpenRowsAndColumns(char player) {
-        int openRows = 0;
-        int openCols = 0;
-
-        for (int col = 0; col < width; col++) {
-            if (topPieceIndex[col] < height) {
-                openCols++;
-            }
-        }
-
-        for (int row = 0; row < height; row++) {
-            if (topPieceIndex[0] > 0 && grid[row][0] == ' ') {
-                openRows++;
-            }
-        }
-
-        // Example: +5 for each open row, +3 for each open column
-        return openRows * 5 + openCols * 3;
-    }
-
-    private int evaluateLosingMoves(char player) {
         int score = 0;
 
-        // Your logic for avoiding losing moves
-        // Example: -50 for making a move that allows the opponent to win in the next turn
-        if (isLosingMove(player)) {
-            score -= 50;
+        for(int i = 0 ; i < 2 ;i++) {
+            for (int j = 0; j < 2; j++) {
+                if (grid[centerRow - i][centerCol - j] == player) {
+                    score += 20 - ((i * 5)+(j*5));
+                }
+            }
         }
-
         return score;
     }
-
-    private boolean isLosingMove(char player) {
-        // Your logic to check for a move that allows the opponent to win in the next turn
-        return false;
-    }
-
-
 
 
     /**
@@ -526,11 +465,11 @@ public class Connect4Game {
     public static void main(String[] args) {
         Connect4Game board = new Connect4Game(4, 4, 3);
 
-        board.play('o', 1);
-        board.play('x', 1);
-        board.play('o', 2);
-        board.play('x', 2);
-        board.play('x', 3);
+        board.addSlide('o', 1);
+        board.addSlide('x', 1);
+        board.addSlide('o', 2);
+        board.addSlide('x', 2);
+        board.addSlide('x', 3);
 //        board.play('x', 3);
 
         System.out.println("board:");

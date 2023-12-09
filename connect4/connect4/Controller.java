@@ -3,7 +3,6 @@ package connect4;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Random;
 //import javafx.util.Pair;
 
 
@@ -54,6 +53,7 @@ public class Controller {
 //        Random random = new Random();
 //        int r = random.nextInt(n);
 //        board = board.allNextMoves(computer).get(r);
+        //2nd param depth is for the depth of the evaluation
         board = (Connect4Game) maxMove(board,3).get(1);
     }
 
@@ -71,32 +71,38 @@ public class Controller {
             System.out.print("Enter column: ");
             col = s.nextInt();
 
-            System.out.print("Enter move: ");
+            System.out.print("Enter move ('a' for add , 's' for swap , 'd' for delete): ");
             m = s.next();
             System.out.println();
             if ((col > 0) && (col - 1 < board.getWidth())) {
                 if (m.equals("a")) {
-                    if (board.play(human, col - 1)) {
+                    if (board.addSlide(human, col - 1)) {
                         return;
                     }
                 }
                 if (m.equals("s")) {
-                    if (board.swap(human, col - 1)) {
+                    if (board.swapSlide(human, col - 1)) {
                         return;
                     }
                 }
                 if (m.equals("d")) {
-                    if (board.delete(human, col - 1)) {
+                    if (board.deleteSlide(human, col - 1)) {
                         return;
                     }
                 }
-                System.out.println("Invalid Column: Column " + col + " is full!, try agine");
+                System.out.println("Invalid move, try again");
             }
             System.out.println("Invalid Column: out of range " + board.getWidth() + ", try agine");
         }
     }
+
     private List<Object> maxMove(Connect4Game b,int depth) {
         List<Object> result = new ArrayList<>();
+        if (b.isFinished()|| depth < 1) {
+            result.add(b.evaluate(computer));
+            result.add(b);
+            return result;
+        }
         List<Connect4Game> nextMoves = b.allNextMoves(computer);
         int maxEval = Integer.MIN_VALUE;
         Connect4Game bestMove = null;
@@ -143,16 +149,15 @@ public class Controller {
         Scanner s = new Scanner(System.in);
         int n , w;
         while (true) {
-            System.out.print("Enter Dim: ");
+            System.out.print("Enter Dim (>3): ");
             n = s.nextInt();
-            System.out.print("Enter Winning number: ");
+            System.out.print("Enter Winning Slides number (>2): ");
             w = s.nextInt();
             if (n > 3 && w > 2 && n>=w) {
-
                 g.setDim(n,w);
                 return;
             }
-            System.out.println("try agine");
+            System.out.println("try again");
         }
     }
 
