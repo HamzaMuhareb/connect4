@@ -1,2 +1,2 @@
 # connect4
-algorithms task
+algorithms mini max task
