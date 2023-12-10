@@ -199,10 +199,12 @@ public class Connect4Game {
         int centerRow = height / 2;
         int score = 0;
 
-        for(int i = 0 ; i < 2 ;i++) {
-            for (int j = 0; j < 2; j++) {
-                if (grid[centerRow - i][centerCol - j] == player) {
-                    score += 20 - ((i * 5)+(j*5));
+        int s = 2;
+        for(int i = 0 ; i < s ;i++) {
+            for (int j = 0; j < s; j++) {
+                if (grid[centerRow - i][centerCol - j] == player||grid[centerRow + i][centerCol + j] == player
+                        ||grid[centerRow + i][centerCol - j] == player||grid[centerRow - i][centerCol + j] == player) {
+                    score += (s*10) - ((i * 5)+(j*5));
                 }
             }
         }
