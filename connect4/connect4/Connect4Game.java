@@ -67,15 +67,23 @@ public class Connect4Game {
             }
 
             if (topPieceIndex[i] != height ) {
-                Connect4Game nextBoard = new Connect4Game(this);
-                nextBoard.swapSlide(nextPlayer, i);
-                nextBoards.add(nextBoard);
+                for (int j = 0; j < width; j++) {
+                    if (topPieceIndex[j] != height && i != j) {
+                        if ( grid[topPieceIndex[i]][i] != grid[topPieceIndex[j]][j]) {
+                            Connect4Game nextBoard = new Connect4Game(this);
+                            nextBoard.swapSlide(nextPlayer, i, j);
+                            nextBoards.add(nextBoard);
+                        }
+                    }
+                }
             }
 
             if (topPieceIndex[i] != height ) {
-                Connect4Game nextBoard = new Connect4Game(this);
-                nextBoard.deleteSlide(nextPlayer, i);
-                nextBoards.add(nextBoard);
+                if ( grid[topPieceIndex[i]][i] != nextPlayer) {
+                    Connect4Game nextBoard = new Connect4Game(this);
+                    nextBoard.deleteSlide(nextPlayer, i);
+                    nextBoards.add(nextBoard);
+                }
             }
         }
         return nextBoards;
@@ -93,11 +101,16 @@ public class Connect4Game {
     }
 
 
-    public boolean swapSlide(char player, int col) {
-        if (topPieceIndex[col] != height ) {
-            grid[topPieceIndex[col]][col] = player;
-            lastColumnPlayed = col;
-            return true;
+    public boolean swapSlide(char player, int col1 ,int col2) {
+        if (topPieceIndex[col1] != height && topPieceIndex[col2] != height && col1 != col2) {
+           if ( grid[topPieceIndex[col1]][col1] != grid[topPieceIndex[col2]][col2]) {
+               char temp;
+               temp = grid[topPieceIndex[col1]][col1];
+               grid[topPieceIndex[col1]][col1] =grid[topPieceIndex[col2]][col2];
+               grid[topPieceIndex[col2]][col2] = temp ;
+               lastColumnPlayed = col1;
+               return true;
+           }
         }
         return false;
     }
@@ -105,11 +118,13 @@ public class Connect4Game {
 
     public boolean deleteSlide(char player, int col) {
         if (topPieceIndex[col] != height ) {
-            grid[topPieceIndex[col]][col] = ' ';
-            topPieceIndex[col] += 1;
-            fills--;
-            lastColumnPlayed = col;
-            return true;
+            if ( grid[topPieceIndex[col]][col] != player) {
+                grid[topPieceIndex[col]][col] = ' ';
+                topPieceIndex[col] += 1;
+                fills--;
+                lastColumnPlayed = col;
+                return true;
+            }
         }
         return false;
     }
@@ -121,13 +136,12 @@ public class Connect4Game {
      * @return
      */
     public int evaluate(char player) {
-        // i it's for determinate the difficulty
-        int i = 10;
 
         if (isWin(player)) {
-            return 300;
-        } else if (isWin(otherPlayer(player))) {
-            return -(300/i);
+            return Integer.MAX_VALUE;
+        }
+        else if (isWin(otherPlayer(player))) {
+            return Integer.MIN_VALUE;
         }
 
         int score = 0;
@@ -138,9 +152,9 @@ public class Connect4Game {
         score += evaluateCenterControl(player);
 
         //evaluate losing
-        score -= (evaluateWinConditions(otherPlayer(player))/i);
+        score -= (evaluateWinConditions(otherPlayer(player)));
 
-        score -= (evaluateCenterControl(otherPlayer(player))/i);
+        score -= (evaluateCenterControl(otherPlayer(player)));
 
         return score;
     }
@@ -186,7 +200,7 @@ public class Connect4Game {
         }
 
         if (consecutiveCount == numOfPiecesToWin -1) {
-            return 150;
+            return 1000;
         }
         else if (consecutiveCount > 1){
             return consecutiveCount*10;

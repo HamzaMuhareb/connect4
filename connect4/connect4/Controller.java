@@ -53,8 +53,7 @@ public class Controller {
 //        Random random = new Random();
 //        int r = random.nextInt(n);
 //        board = board.allNextMoves(computer).get(r);
-        //2nd param depth is for the depth of the evaluation
-        board = (Connect4Game) maxMove(board,3).get(1);
+        board = (Connect4Game) maxMove(board,7, Integer.MIN_VALUE , Integer.MAX_VALUE).get(1);
     }
 
 
@@ -66,6 +65,7 @@ public class Controller {
     private void humanPlay() {
         Scanner s = new Scanner(System.in);
         int col;
+        int col2;
         String m;
         while (true) {
             System.out.print("Enter column: ");
@@ -73,30 +73,39 @@ public class Controller {
 
             System.out.print("Enter move ('a' for add , 's' for swap , 'd' for delete): ");
             m = s.next();
-            System.out.println();
+
             if ((col > 0) && (col - 1 < board.getWidth())) {
                 if (m.equals("a")) {
                     if (board.addSlide(human, col - 1)) {
+                        System.out.println();
                         return;
                     }
                 }
                 if (m.equals("s")) {
-                    if (board.swapSlide(human, col - 1)) {
+
+                    System.out.print("Enter second column: ");
+                    col2 = s.nextInt();
+
+                    if (board.swapSlide(human, col - 1, col2 -1)) {
+                        System.out.println();
                         return;
                     }
                 }
                 if (m.equals("d")) {
                     if (board.deleteSlide(human, col - 1)) {
+                        System.out.println();
                         return;
                     }
                 }
                 System.out.println("Invalid move, try again");
             }
-            System.out.println("Invalid Column: out of range " + board.getWidth() + ", try agine");
+            else{
+                System.out.println("Invalid Column: out of range " + board.getWidth() + ", try again");
+            }
         }
     }
 
-    private List<Object> maxMove(Connect4Game b,int depth) {
+    private List<Object> maxMove(Connect4Game b, int depth, int alpha, int beta) {
         List<Object> result = new ArrayList<>();
         if (b.isFinished()|| depth < 1) {
             result.add(b.evaluate(human));
@@ -108,10 +117,14 @@ public class Controller {
         Connect4Game bestMove = null;
 
         for (Connect4Game move : nextMoves) {
-            int eval = (int) minMove(move, depth-1).get(0);
+            int eval = (int) minMove(move, depth - 1, alpha, beta).get(0);
             if (eval > maxEval) {
                 maxEval = eval;
                 bestMove = move;
+            }
+            alpha = Math.max(alpha, maxEval);
+            if (beta <= alpha) {
+                break;
             }
         }
 
@@ -120,7 +133,7 @@ public class Controller {
         return result;
     }
 
-    private List<Object> minMove(Connect4Game b,int depth) {
+    private List<Object> minMove(Connect4Game b, int depth, int alpha, int beta) {
         List<Object> result = new ArrayList<>();
         if (b.isFinished()|| depth < 1) {
             result.add(b.evaluate(computer));
@@ -133,10 +146,14 @@ public class Controller {
         Connect4Game minMove = null;
 
         for (Connect4Game move : nextMoves) {
-            int eval = (int) maxMove(move ,depth -1).get(0);
+            int eval = (int) maxMove(move, depth - 1, alpha, beta).get(0);
             if (eval < minEval) {
                 minEval = eval;
                 minMove = move;
+            }
+            beta = Math.min(beta, minEval);
+            if (beta <= alpha) {
+                break;
             }
         }
 
